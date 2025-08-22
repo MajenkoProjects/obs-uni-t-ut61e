@@ -1,0 +1,2 @@
+/home/matt/git/TenmaScope-obs/cmake/rundir/RelWithDebInfo/obs-plugins/64bit/tenmascope-obs.so
+/home/matt/git/TenmaScope-obs/cmake/rundir/RelWithDebInfo/data/obs-plugins/tenmascope-obs/data/locale/en-US.ini
