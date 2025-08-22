@@ -28,7 +28,9 @@ include(cmake/ObsPluginHelpers.cmake)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
+pkg_check_modules(deps REQUIRED IMPORTED_TARGET libsigrok)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE PkgConfig::deps)
+
 
 # Uncomment these lines if you want to use the OBS Frontend API in your plugin
 #[[
