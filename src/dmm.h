@@ -20,18 +20,31 @@ struct dmm {
 	bool run;
 
     struct sr_context *sr_ctx;
+    struct sr_session *session;
 
     time_t last_update;
-    float value;
+	float previous_value;
+    float current_value;
     int decimal;
+
+	bool is_negative;
+
+	char text[10];
+
+	int previous_range;
+	int current_range;
+
+	int offset;
+
+	bool milli;
+	bool micro;
+
     bool DC;
     bool AC;
     bool hold;
     bool diode;
     bool continuity;
     bool delta;
-    bool micro;
-    bool milli;
     bool volts;
     bool amps;
     bool c;
@@ -49,8 +62,24 @@ struct dmm {
     bool manurange;
 };
 
+enum ranges {
+    VOLTS_DC = 1,
+    VOLTS_AC,
+    AMPS_DC,
+    AMPS_AC,
+    OHMS,
+    CONT,
+    DIODE,
+    FARADS,
+    HZ,
+    DUTY,
+    DEGC,
+    DEGF,
+};
+
+
 extern void *video_thread(void *data);
 extern void *dmm_thread(void *data);
-
+extern void dmm_terminate(struct dmm *dmm);
 
 #endif

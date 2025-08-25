@@ -7,6 +7,9 @@
 
 // uni-t-ut61e:conn=1a86.e008
 
+void dmm_terminate(struct dmm *dmm) {
+	sr_session_stop(dmm->session);
+}
 
 void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const struct sr_datafeed_packet *packet, void *cb_data) {
 
@@ -31,23 +34,164 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
     	dmm->manurange = !(data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
     	dmm->delta = (data->meaning->mqflags & SR_MQFLAG_RELATIVE);
 
+		dmm->previous_value = dmm->current_value;
+		dmm->current_value = fabs(value);
+		dmm->is_negative = (value < 0);
+
+		dmm->previous_range = dmm->current_range;
+
 		switch (data->meaning->mq) {
  			case SR_MQ_VOLTAGE:
-				dmm->volts = 1;
-
-				if (value < 1.0) {
-					value *= 1000.0;
-					scale ++;
+				if (data->meaning->mqflags & SR_MQFLAG_AC) {
+					dmm->current_range = VOLTS_AC;
+				} else {
+					dmm->current_range = VOLTS_DC;
 				}
 
-				if (value < 1.0) {
-					value *= 1000.0;
-					scale ++;
+
+
+				/* Ranges
+				 *  0 - No range
+                 *  4 - 1.0000 µV
+                 *  5 - 10.000 µV
+                 *  6 - 100.00 µV
+                 *  7 - 1.0000 mV
+                 *  8 - 10.000 mV
+                 *  9 - 100.00 mV
+				 * 10 - 1.0000 V
+				 * 11 - 10.000 V
+				 * 12 - 100.00 V
+				 * 13 - 1000.0 V
+			 	 */
+
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 0;
 				}
 
-				dmm->milli = (scale == 1);
-				dmm->micro = (scale == 2);
-				dmm->value = value;
+				if (dmm->current_value < 0.000002 && dmm->offset > 4) {
+					dmm->offset = 4;
+				}
+				if (dmm->current_value > 0.0000022 && dmm->offset < 5) {
+					dmm->offset = 5;
+				}
+
+				if (dmm->current_value < 0.00002 && dmm->offset > 5) {
+					dmm->offset = 5;
+				}
+				if (dmm->current_value > 0.000022 && dmm->offset < 6) {
+					dmm->offset = 6;
+				}
+
+				if (dmm->current_value < 0.0002 && dmm->offset > 6) {
+					dmm->offset = 6;
+				}
+				if (dmm->current_value > 0.00022 && dmm->offset < 7) {
+					dmm->offset = 7;
+				}
+
+				if (dmm->current_value < 0.002 && dmm->offset > 7) {
+					dmm->offset = 7;
+				}
+				if (dmm->current_value > 0.0022 && dmm->offset < 8) {
+					dmm->offset = 8;
+				}
+
+				if (dmm->current_value < 0.02 && dmm->offset > 8) {
+					dmm->offset = 8;
+				}
+				if (dmm->current_value > 0.022 && dmm->offset < 9) {
+					dmm->offset = 9;
+				}
+
+				if (dmm->current_value < 0.2 && dmm->offset > 9) {
+					dmm->offset = 9;
+				}
+				if (dmm->current_value > 0.22 && dmm->offset < 10) {
+					dmm->offset = 10;
+				}
+
+				if (dmm->current_value < 2.0 && dmm->offset > 10) {
+					dmm->offset = 10;
+				}
+				if (dmm->current_value > 2.2 && dmm->offset < 11) {
+					dmm->offset = 11;
+				}
+
+
+				if (dmm->current_value < 20.0 && dmm->offset > 11) {
+					dmm->offset = 11;
+				}
+				if (dmm->current_value > 22.0 && dmm->offset < 12) {
+					dmm->offset = 12;
+				}
+
+				if (dmm->current_value < 200.0 && dmm->offset > 12) {
+					dmm->offset = 12;
+				}
+				if (dmm->current_value > 220.0 && dmm->offset < 13) {
+					dmm->offset = 13;
+				}
+
+
+				switch (dmm->offset) {
+					case 4: 
+						dmm->micro = true;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000000.0);
+						break;
+					case 5: 
+						dmm->micro = true;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000000.0);
+						break;
+					case 6: 
+						dmm->micro = true;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000000.0);
+						break;
+					case 7: 
+						dmm->micro = false;
+						dmm->milli = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000.0);
+						break;
+					case 8: 
+						dmm->micro = false;
+						dmm->milli = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000.0);
+						break;
+					case 9: 
+						dmm->micro = false;
+						dmm->milli = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000.0);
+						break;
+					case 10: 
+						dmm->micro = false;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value);
+						break;
+					case 11: 
+						dmm->micro = false;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value);
+						break;
+					case 12: 
+						dmm->micro = false;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value);
+						break;
+					case 13: 
+						dmm->micro = false;
+						dmm->milli = false;
+						snprintf(dmm->text, 10, "%6.1f", dmm->current_value);
+						break;
+						
+				}
+
+				for (char *ptr = dmm->text; *ptr; ptr++) {
+					if (*ptr == ' ') *ptr = '!';
+				}
+
+
 				break;
 
     		case SR_MQ_CURRENT:
@@ -80,7 +224,6 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 }
 
-
 void *dmm_thread(void *data) {
 
 	struct dmm *dmm = data;
@@ -90,7 +233,6 @@ void *dmm_thread(void *data) {
 	struct sr_dev_driver *driver;
 	struct sr_dev_driver **drivers;
 	struct sr_config *conf;
-	struct sr_session *session;
 	struct sr_dev_inst *current_device = NULL;
 
 	GSList *devices;
@@ -133,7 +275,6 @@ void *dmm_thread(void *data) {
 
 	drvopts = g_slist_append(drvopts, conf);
 
-
     while (os_event_try(dmm->stop_signal) == EAGAIN) {
 
 		if (current_device == NULL) {
@@ -150,27 +291,27 @@ void *dmm_thread(void *data) {
 			printf("Found %s\n", sr_dev_inst_model_get(current_device));
 			g_slist_free(devices);
 
-			sr_session_new(dmm->sr_ctx, &session);
-			sr_session_datafeed_callback_add(session, datafeed_in, dmm);
+			sr_session_new(dmm->sr_ctx, &dmm->session);
+			sr_session_datafeed_callback_add(dmm->session, datafeed_in, dmm);
 
 			if (SR_OK != sr_dev_open(current_device)) {
 				printf("Unable to open device!\n");
-				sr_session_destroy(session);
+				sr_session_destroy(dmm->session);
 				current_device = NULL;
 				continue;
 			}
 
-			if (SR_OK != sr_session_dev_add(session, current_device)) {
+			if (SR_OK != sr_session_dev_add(dmm->session, current_device)) {
 				printf("Error adding device to the session\n");
-				sr_session_destroy(session);
+				sr_session_destroy(dmm->session);
 				current_device = NULL;
 				continue;
 			}
 
-			sr_session_start(session);
+			sr_session_start(dmm->session);
 		}
 
-		sr_session_run(session);
+		sr_session_run(dmm->session);
 		printf("Ended main loop\n");
 
 		current_device = NULL;
@@ -178,8 +319,11 @@ void *dmm_thread(void *data) {
 		os_sleepto_ns(os_gettime_ns() + 30000000);
 
 	}
+
+	sr_session_destroy(dmm->session);
 	
 
+	free(conf);
 
 
 	return NULL;
