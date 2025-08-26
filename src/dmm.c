@@ -15,8 +15,6 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 	struct dmm *dmm = cb_data;
 
-	int scale = 0;
-
 	if (SR_DF_ANALOG == packet->type) {
 
 		dmm->last_update = time(NULL);
@@ -26,13 +24,8 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 		sr_analog_to_float(data, &value);
 
-  		dmm->AC = (data->meaning->mqflags & SR_MQFLAG_AC);
-    	dmm->DC = (data->meaning->mqflags & SR_MQFLAG_DC);
-    	dmm->diode = (data->meaning->mqflags & SR_MQFLAG_DIODE);
-    	dmm->hold = (data->meaning->mqflags & SR_MQFLAG_HOLD);
     	dmm->autorange = (data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
     	dmm->manurange = !(data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
-    	dmm->delta = (data->meaning->mqflags & SR_MQFLAG_RELATIVE);
 
 		dmm->previous_value = dmm->current_value;
 		dmm->current_value = fabs(value);
@@ -40,12 +33,26 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 		dmm->previous_range = dmm->current_range;
 
+		dmm->micro = false;
+		dmm->milli = false;
+		dmm->kilo = false;
+		dmm->mega = false;
+
 		switch (data->meaning->mq) {
  			case SR_MQ_VOLTAGE:
+    		case SR_MQ_CURRENT:
 				if (data->meaning->mqflags & SR_MQFLAG_AC) {
-					dmm->current_range = VOLTS_AC;
+					if (data->meaning->mq == SR_MQ_VOLTAGE) {
+						dmm->current_range = VOLTS_AC;
+					} else {
+						dmm->current_range = AMPS_AC;
+					}
 				} else {
-					dmm->current_range = VOLTS_DC;
+					if (data->meaning->mq == SR_MQ_VOLTAGE) {
+						dmm->current_range = VOLTS_DC;
+					} else {
+						dmm->current_range = AMPS_DC;
+					}
 				}
 
 
@@ -136,55 +143,45 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 				switch (dmm->offset) {
 					case 4: 
 						dmm->micro = true;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000000.0);
 						break;
 					case 5: 
 						dmm->micro = true;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000000.0);
 						break;
 					case 6: 
 						dmm->micro = true;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000000.0);
 						break;
 					case 7: 
-						dmm->micro = false;
 						dmm->milli = true;
 						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000.0);
 						break;
 					case 8: 
-						dmm->micro = false;
 						dmm->milli = true;
 						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000.0);
 						break;
 					case 9: 
-						dmm->micro = false;
 						dmm->milli = true;
 						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000.0);
 						break;
 					case 10: 
-						dmm->micro = false;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.4f", dmm->current_value);
 						break;
 					case 11: 
-						dmm->micro = false;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.3f", dmm->current_value);
 						break;
 					case 12: 
-						dmm->micro = false;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.2f", dmm->current_value);
 						break;
 					case 13: 
-						dmm->micro = false;
-						dmm->milli = false;
 						snprintf(dmm->text, 10, "%6.1f", dmm->current_value);
 						break;
 						
+				}
+
+				if (isinf(dmm->current_value)) {
+					snprintf(dmm->text, 20, "!0L!!");
 				}
 
 				for (char *ptr = dmm->text; *ptr; ptr++) {
@@ -194,10 +191,119 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 				break;
 
-    		case SR_MQ_CURRENT:
-				break;
 
     		case SR_MQ_RESISTANCE:
+
+				dmm->current_range = OHMS;
+
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 0;
+				}
+
+				if (dmm->current_value < 2.0 && dmm->offset > 10) {
+					dmm->offset = 10;
+				}
+				if (dmm->current_value > 2.2 && dmm->offset < 11) {
+					dmm->offset = 11;
+				}
+
+
+				if (dmm->current_value < 20.0 && dmm->offset > 11) {
+					dmm->offset = 11;
+				}
+				if (dmm->current_value > 22.0 && dmm->offset < 12) {
+					dmm->offset = 12;
+				}
+
+				if (dmm->current_value < 200.0 && dmm->offset > 12) {
+					dmm->offset = 12;
+				}
+				if (dmm->current_value > 220.0 && dmm->offset < 13) {
+					dmm->offset = 13;
+				}
+
+				if (dmm->current_value < 2000.0 && dmm->offset > 13) {
+					dmm->offset = 13;
+				}
+				if (dmm->current_value > 2200.0 && dmm->offset < 14) {
+					dmm->offset = 14;
+				}
+
+				if (dmm->current_value < 20000.0 && dmm->offset > 14) {
+					dmm->offset = 14;
+				}
+				if (dmm->current_value > 22000.0 && dmm->offset < 15) {
+					dmm->offset = 15;
+				}
+
+				if (dmm->current_value < 200000.0 && dmm->offset > 15) {
+					dmm->offset = 15;
+				}
+				if (dmm->current_value > 220000.0 && dmm->offset < 16) {
+					dmm->offset = 15;
+				}
+
+				if (dmm->current_value < 2000000.0 && dmm->offset > 16) {
+					dmm->offset = 16;
+				}
+				if (dmm->current_value > 2200000.0 && dmm->offset < 17) {
+					dmm->offset = 17;
+				}
+
+				if (dmm->current_value < 20000000.0 && dmm->offset > 17) {
+					dmm->offset = 17;
+				}
+				if (dmm->current_value > 22000000.0 && dmm->offset < 18) {
+					dmm->offset = 18;
+				}
+
+
+				switch (dmm->offset) {
+					case 10: 
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value);
+						break;
+					case 11: 
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value);
+						break;
+					case 12: 
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value);
+						break;
+					case 13: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value / 1000);
+						break;
+					case 14: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value / 1000);
+						break;
+					case 15: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value / 1000);
+						break;
+					case 16: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value / 1000000);
+						break;
+					case 17: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value / 1000000);
+						break;
+					case 18: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value / 1000000);
+						break;
+						
+				}
+
+				if (isinf(dmm->current_value)) {
+					snprintf(dmm->text, 20, "!0L!!");
+				}
+
+				for (char *ptr = dmm->text; *ptr; ptr++) {
+					if (*ptr == ' ') *ptr = '!';
+				}
+
+
 				break;
 
 			case SR_MQ_CAPACITANCE:

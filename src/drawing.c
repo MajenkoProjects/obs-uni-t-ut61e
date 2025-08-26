@@ -11,14 +11,77 @@
 #include "dmm.h"
 
 const char *text_font = "LiberationSans-Bold.ttf";
-const char *seg_font = "DSEG7Classic-Italic.ttf";
+const char *seg_font = "DSEG7Classic-BoldItalic.ttf";
+const char *dmm_font = "DMM.ttf";
 
 const char shadow_offset = 2;
+
+
+#define COORD(X, Y) ((X) + offset) * WIDTH, ((Y) + offset) * WIDTH
+#define SIZE(X) (X) * WIDTH
+
+
+void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
+
+	if ((dmm == NULL) || (dmm->current_range & VOLTS) || (dmm->current_range & AMPS)) {
+		if ((dmm == NULL) || (dmm->current_range & 0xF000) == DC)
+			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.08, 0.06), "DC");
+		if ((dmm == NULL) || (dmm->current_range & 0xF000) == AC)
+			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.15, 0.06), "AC");
+	}
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.30, 0.062), "H");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.055), 0, COORD(0.55, 0.062), "D");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.63, 0.062), "C");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.060), 0, COORD(0.69, 0.062), "Δ");
+	if ((dmm == NULL) || dmm->micro) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.8, 0.06), "µ");
+	if ((dmm == NULL) || dmm->milli) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.83, 0.06), "m");
+	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == VOLTS))
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.87, 0.06), "V");
+	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == AMPS)) 
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.90, 0.06), "A");
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.835, 0.1), "°");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.1), "°");
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.12), "C");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.12), "F");
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.050), 0, COORD(0.92, 0.11), "%");
+
+	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == OHMS) {
+		if ((dmm == NULL) || dmm->mega) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.16), "M");
+		if ((dmm == NULL) || dmm->kilo) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.16), "k");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.92, 0.16), "Ω");
+	}
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.90, 0.20), "Hz");
+
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.82, 0.24), "m");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.24), "µ");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.905, 0.24), "n");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.24), "F");
+
+
+	if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.35), "AUTO");
+	if ((dmm == NULL) || dmm->manurange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.45, 0.35), "MANU");
+
+
+	if ((dmm == NULL) || dmm->is_negative) gdImageFilledRectangle(img, COORD(0.01, 0.175), COORD(0.07, 0.195), color);
+
+	if (dmm == NULL) {
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.28), "8.8.8.8.8");
+	} else {
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.28), dmm->text);
+	}
+}
+
 
 void *video_thread(void *data) {
 	struct dmm *dmm = data;
 	uint32_t pixels[WIDTH * HEIGHT];
 	uint64_t cur_time = os_gettime_ns();
+
 
 	gdImagePtr background;
 
@@ -49,6 +112,18 @@ void *video_thread(void *data) {
 
 
 	while (os_event_try(dmm->stop_signal) == EAGAIN) {
+		if ((time(NULL) - dmm->last_update) < 4) {
+			if (dmm->fade < 255) {
+				dmm->fade += 16;
+			}
+		} else {
+			if (dmm->fade > 0) {
+				dmm->fade -= 16;
+			}
+		}
+
+		if (dmm->fade > 255) dmm->fade = 255;
+		if (dmm->fade < 0) dmm->fade = 0;
 
 		gdImagePtr img = gdImageCreateTrueColor(WIDTH, HEIGHT);
 		gdImageSaveAlpha(img, true);
@@ -68,48 +143,10 @@ void *video_thread(void *data) {
 		gdImageFilledRectangle(lcd, 0, 0, WIDTH, HEIGHT, lcd_bg);
 		gdImageAlphaBlending(lcd, true);
 
-		if (dmm->DC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 20 + shadow_offset, 20 + shadow_offset, "DC");
-		if (dmm->AC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 40 + shadow_offset, 20 + shadow_offset, "AC");
-		gdImageStringTTF(lcd, NULL, lcd_shadow, seg_font, 40, 0, 20 + shadow_offset, 80 + shadow_offset, dmm->text);
 
-		if (dmm->is_negative) gdImageFilledRectangle(lcd, 1 + shadow_offset, 50 + shadow_offset, 14 + shadow_offset, 53 + shadow_offset, lcd_shadow);
-
-		if (dmm->micro) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 204, 24, "µ");
-		if (dmm->milli) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 214, 24, "m");
-		if (dmm->current_range == VOLTS_AC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 220 + shadow_offset, 20 + shadow_offset, "V");
-		if (dmm->current_range == VOLTS_DC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 220 + shadow_offset, 20 + shadow_offset, "V");
-		if (dmm->current_range == AMPS_AC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 230 + shadow_offset, 20 + shadow_offset, "A");
-		if (dmm->current_range == AMPS_DC) gdImageStringTTF(lcd, NULL, lcd_shadow, text_font, 10, 0, 230 + shadow_offset, 20 + shadow_offset, "A");
-
-
-
-
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 20, 20, "DC");
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 40, 20, "AC");
-		gdImageStringTTF(lcd, NULL, lcd_hint, seg_font, 40, 0, 20, 80, "8.8888");
-		gdImageFilledRectangle(lcd, 1, 50, 14, 53, lcd_hint);
-
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 200, 20, "µ");
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 210, 20, "m");
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 220, 20, "V");
-		gdImageStringTTF(lcd, NULL, lcd_hint, text_font, 10, 0, 230, 20, "A");
-
-
-
-
-		if (dmm->DC) gdImageStringTTF(lcd, NULL, lcd_text, "LiberationSans-Bold.ttf", 10, 0, 20, 20, "DC");
-		if (dmm->AC) gdImageStringTTF(lcd, NULL, lcd_text, "LiberationSans-Bold.ttf", 10, 0, 40, 20, "AC");
-		gdImageStringTTF(lcd, NULL, lcd_text, "DSEG7Classic-Italic.ttf", 40, 0, 20, 80, dmm->text);
-		if (dmm->is_negative) gdImageFilledRectangle(lcd, 1, 50, 14, 53, lcd_text);
-
-		if (dmm->micro) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 200, 20, "µ");
-		if (dmm->milli) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 210, 20, "m");
-		if (dmm->current_range == VOLTS_DC) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 220, 20, "V");
-		if (dmm->current_range == VOLTS_AC) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 220, 20, "V");
-		if (dmm->current_range == AMPS_DC) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 230, 20, "A");
-		if (dmm->current_range == AMPS_AC) gdImageStringTTF(lcd, NULL, lcd_text, text_font, 10, 0, 230, 20, "A");
-
-
+		main_image(lcd, dmm, 0.01, lcd_shadow);
+		main_image(lcd, NULL, 0, lcd_hint);
+		main_image(lcd, dmm, 0, lcd_text);
 
 
 		gdImageCopy(img, lcd, 0, 0, 0, 0, WIDTH, HEIGHT);
@@ -119,7 +156,7 @@ void *video_thread(void *data) {
 		int op = 0;
 		for (int y = 0; y < HEIGHT; y++) {
 			for (int x = 0; x < WIDTH; x++) {
-				pixels[op++] = 0xFF000000 | gdImageGetPixel(img, x, y);
+				pixels[op++] = (dmm->fade << 24) | gdImageGetPixel(img, x, y);
 			}
 		}
 		gdImageDestroy(img);
