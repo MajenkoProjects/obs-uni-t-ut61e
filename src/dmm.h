@@ -10,6 +10,8 @@
 #define WIDTH 280
 #define HEIGHT 180
 
+#define MAX_HIST 23
+
 struct dmm {
 
     obs_source_t *source;
@@ -25,7 +27,7 @@ struct dmm {
     struct sr_session *session;
 
     time_t last_update;
-	float previous_value;
+	float previous_value[MAX_HIST];
     float current_value;
     int decimal;
 

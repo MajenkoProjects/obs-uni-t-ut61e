@@ -27,9 +27,18 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
     	dmm->autorange = (data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
     	dmm->manurange = !(data->meaning->mqflags & SR_MQFLAG_AUTORANGE);
 
-		dmm->previous_value = dmm->current_value;
 		dmm->current_value = fabs(value);
 		dmm->is_negative = (value < 0);
+
+		for (int i = 0; i < MAX_HIST - 1; i++) {
+			dmm->previous_value[i] = dmm->previous_value[i+1];
+		}
+
+		if (isnan(value) || isinf(value)) {
+			dmm->previous_value[MAX_HIST - 1] = 0;
+		} else {
+			dmm->previous_value[MAX_HIST - 1] = value;
+		}
 
 		dmm->previous_range = dmm->current_range;
 

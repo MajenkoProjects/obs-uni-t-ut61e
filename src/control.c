@@ -68,8 +68,12 @@ static void *dmm_create(obs_data_t *settings, obs_source_t *source) {
 
 	dmm->fade = 0;
 	dmm->current_range = 0;
-	dmm->previous_range = 0;
 	dmm->last_update = 0;
+	dmm->previous_range = 0;
+
+	for (int i = 0; i < MAX_HIST; i++) {
+		dmm->previous_value[i] = 0;
+	}
 
 	if (os_event_init(&dmm->stop_signal, OS_EVENT_TYPE_MANUAL) != 0) {
 		dmm_destroy(dmm);

@@ -14,8 +14,6 @@ const char *text_font = "LiberationSans-Bold.ttf";
 const char *seg_font = "DSEG7Classic-BoldItalic.ttf";
 const char *dmm_font = "DMM.ttf";
 
-const char shadow_offset = 2;
-
 
 #define COORD(X, Y) ((X) + offset) * WIDTH, ((Y) + offset) * WIDTH
 #define SIZE(X) (X) * WIDTH
@@ -25,60 +23,85 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 
 	if ((dmm == NULL) || (dmm->current_range & VOLTS) || (dmm->current_range & AMPS)) {
 		if ((dmm == NULL) || (dmm->current_range & 0xF000) == DC)
-			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.08, 0.06), "DC");
+			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.08, 0.08), "DC");
 		if ((dmm == NULL) || (dmm->current_range & 0xF000) == AC)
-			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.15, 0.06), "AC");
+			gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.15, 0.08), "AC");
 	}
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.30, 0.062), "H");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.30, 0.082), "H");
 
 	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == DIODE))
-		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.055), 0, COORD(0.55, 0.062), "D");
+		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.055), 0, COORD(0.55, 0.082), "D");
 	if ((dmm == NULL) || (dmm->current_range & (CONT))) 
-		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.63, 0.062), "C");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.060), 0, COORD(0.69, 0.062), "Δ");
-	if ((dmm == NULL) || dmm->micro) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.8, 0.06), "µ");
-	if ((dmm == NULL) || dmm->milli) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.83, 0.06), "m");
+		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.63, 0.082), "C");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.060), 0, COORD(0.69, 0.082), "Δ");
+	if ((dmm == NULL) || dmm->micro) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.8, 0.08), "µ");
+	if ((dmm == NULL) || dmm->milli) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.83, 0.08), "m");
 
 	if ((dmm == NULL) || ((dmm->current_range & (DIODE | VOLTS))))
-		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.87, 0.06), "V");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.87, 0.08), "V");
 	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == AMPS)) 
-		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.90, 0.06), "A");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.90, 0.08), "A");
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.835, 0.1), "°");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.1), "°");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.835, 0.12), "°");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.12), "°");
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.12), "C");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.12), "F");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.15), "C");
+	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.15), "F");
 
 	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == DUTY) 
-		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.050), 0, COORD(0.92, 0.11), "%");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.050), 0, COORD(0.92, 0.14), "%");
 
-	if ((dmm == NULL) || dmm->mega) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.16), "M");
-	if ((dmm == NULL) || dmm->kilo) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.16), "k");
+	if ((dmm == NULL) || dmm->mega) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.20), "M");
+	if ((dmm == NULL) || dmm->kilo) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.20), "k");
 
 	if ((dmm == NULL) || (dmm->current_range & (CONT | OHMS))) 
-		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.92, 0.16), "Ω");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.92, 0.20), "Ω");
 
 	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == HZ) 
-		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.90, 0.20), "Hz");
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.90, 0.25), "Hz");
 
-	if ((dmm == NULL) || dmm->millif) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.82, 0.24), "m");
-	if ((dmm == NULL) || dmm->microf) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.24), "µ");
-	if ((dmm == NULL) || dmm->nanof) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.905, 0.24), "n");
-	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == FARADS) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.24), "F");
-
-
-	if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.35), "AUTO");
-	if ((dmm == NULL) || dmm->manurange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.45, 0.35), "MANU");
+	if ((dmm == NULL) || dmm->millif) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.82, 0.30), "m");
+	if ((dmm == NULL) || dmm->microf) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.30), "µ");
+	if ((dmm == NULL) || dmm->nanof) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.905, 0.30), "n");
+	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == FARADS) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.30), "F");
 
 
-	if ((dmm == NULL) || dmm->is_negative) gdImageFilledRectangle(img, COORD(0.01, 0.175), COORD(0.07, 0.195), color);
+	if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.37), "AUTO");
+	if ((dmm == NULL) || dmm->manurange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.45, 0.37), "MANU");
+
+
+	if ((dmm == NULL) || dmm->is_negative) gdImageFilledRectangle(img, COORD(0.01, 0.195), COORD(0.07, 0.215), color);
 
 	if (dmm == NULL) {
-		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.28), "8.8.8.8.8");
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.30), "8.8.8.8.8");
 	} else {
-		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.28), dmm->text);
+		gdImageStringTTF(img, NULL, color, seg_font, SIZE(0.14), 0, COORD(0.08, 0.30), dmm->text);
+	}
+
+
+	if (dmm != NULL) {
+		float maxval = 0;
+		float minval = 9999999999999;
+		for (int i = 0; i < MAX_HIST; i++) {
+			if (dmm->previous_value[i] > maxval) maxval = dmm->previous_value[i];
+			if (dmm->previous_value[i] < minval) minval = dmm->previous_value[i];
+		}
+
+		printf("Range: %f - %f\n", minval, maxval);
+
+		float diff = maxval - minval;
+
+		if (diff > 0.0000000001) {
+
+			printf("Diff: %.9f\n", diff);
+
+			for (int i = 0; i < MAX_HIST; i++) {
+				float v = (dmm->previous_value[i] - minval) / diff;
+				gdImageFilledRectangle(img, COORD((i * 0.04) + 0.05, 0.6), COORD((i * 0.04) + 0.075, 0.6 - (v / 10.0)), color);
+			}
+
+		}
 	}
 }
 
@@ -142,15 +165,15 @@ void *video_thread(void *data) {
 		gdImageAlphaBlending(lcd, false);
 
 		int lcd_bg = gdImageColorAllocateAlpha(lcd, 200, 0, 0, 127);
-		int lcd_shadow = gdImageColorAllocateAlpha(lcd, 0, 0, 0, 90);
+		int lcd_shadow = gdImageColorAllocateAlpha(lcd, 0, 0, 0, 100);
 		int lcd_hint = gdImageColorAllocateAlpha(lcd, 0, 0, 0, 120);
-		int lcd_text = gdImageColorAllocateAlpha(lcd, 0, 0, 0, (rand() % 10) + 40);
+		int lcd_text = gdImageColorAllocateAlpha(lcd, 0, 0, 0, (rand() % 10) + 20);
 
 		gdImageFilledRectangle(lcd, 0, 0, WIDTH, HEIGHT, lcd_bg);
 		gdImageAlphaBlending(lcd, true);
 
 
-		main_image(lcd, dmm, 0.01, lcd_shadow);
+		main_image(lcd, dmm, 0.0075, lcd_shadow);
 		main_image(lcd, NULL, 0, lcd_hint);
 		main_image(lcd, dmm, 0, lcd_text);
 
