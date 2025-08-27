@@ -33,6 +33,9 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 
 		dmm->previous_range = dmm->current_range;
 
+		dmm->nanof = false;
+		dmm->microf = false;
+		dmm->millif = false;
 		dmm->micro = false;
 		dmm->milli = false;
 		dmm->kilo = false;
@@ -41,7 +44,10 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 		switch (data->meaning->mq) {
  			case SR_MQ_VOLTAGE:
     		case SR_MQ_CURRENT:
-				if (data->meaning->mqflags & SR_MQFLAG_AC) {
+
+				if (data->meaning->mqflags & SR_MQFLAG_DIODE) {
+					dmm->current_range = DIODE;
+				} else if (data->meaning->mqflags & SR_MQFLAG_AC) {
 					if (data->meaning->mq == SR_MQ_VOLTAGE) {
 						dmm->current_range = VOLTS_AC;
 					} else {
@@ -72,7 +78,7 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 			 	 */
 
 				if (dmm->current_range != dmm->previous_range) {
-					dmm->offset = 0;
+					dmm->offset = 4;
 				}
 
 				if (dmm->current_value < 0.000002 && dmm->offset > 4) {
@@ -197,7 +203,7 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 				dmm->current_range = OHMS;
 
 				if (dmm->current_range != dmm->previous_range) {
-					dmm->offset = 0;
+					dmm->offset = 10;
 				}
 
 				if (dmm->current_value < 2.0 && dmm->offset > 10) {
@@ -307,21 +313,293 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 				break;
 
 			case SR_MQ_CAPACITANCE:
-				break;
+				dmm->current_range = FARADS;
 
-			case SR_MQ_TEMPERATURE:
+				/* Ranges
+				 *  0 - No range
+				 *  1 - 1.0000 nF
+				 *  2 - 10.000 nF
+				 *  3 - 100.00 nF
+                 *  4 - 1.0000 µF
+                 *  5 - 10.000 µF
+                 *  6 - 100.00 µF
+                 *  7 - 1.0000 mF
+                 *  8 - 10.000 mF
+                 *  9 - 100.00 mF
+				 * 10 - 1.0000 F
+				 * 11 - 10.000 F
+				 * 12 - 100.00 F
+				 * 13 - 1000.0 F
+			 	 */
+
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 2;
+				}
+
+				if (dmm->current_value < 0.00000002 && dmm->offset > 2) {
+					dmm->offset = 2;
+				}
+				if (dmm->current_value > 0.000000022 && dmm->offset < 3) {
+					dmm->offset = 3;
+				}
+
+				if (dmm->current_value < 0.0000002 && dmm->offset > 3) {
+					dmm->offset = 3;
+				}
+				if (dmm->current_value > 0.00000022 && dmm->offset < 4) {
+					dmm->offset = 4;
+				}
+
+				if (dmm->current_value < 0.000002 && dmm->offset > 4) {
+					dmm->offset = 4;
+				}
+				if (dmm->current_value > 0.0000022 && dmm->offset < 5) {
+					dmm->offset = 5;
+				}
+
+				if (dmm->current_value < 0.00002 && dmm->offset > 5) {
+					dmm->offset = 5;
+				}
+				if (dmm->current_value > 0.000022 && dmm->offset < 6) {
+					dmm->offset = 6;
+				}
+
+				if (dmm->current_value < 0.0002 && dmm->offset > 6) {
+					dmm->offset = 6;
+				}
+				if (dmm->current_value > 0.00022 && dmm->offset < 7) {
+					dmm->offset = 7;
+				}
+
+				if (dmm->current_value < 0.002 && dmm->offset > 7) {
+					dmm->offset = 7;
+				}
+				if (dmm->current_value > 0.0022 && dmm->offset < 8) {
+					dmm->offset = 8;
+				}
+
+				if (dmm->current_value < 0.02 && dmm->offset > 8) {
+					dmm->offset = 8;
+				}
+				if (dmm->current_value > 0.022 && dmm->offset < 9) {
+					dmm->offset = 9;
+				}
+
+				if (dmm->current_value < 0.2 && dmm->offset > 9) {
+					dmm->offset = 9;
+				}
+				if (dmm->current_value > 0.22 && dmm->offset < 10) {
+					dmm->offset = 10;
+				}
+
+				if (dmm->current_value < 2.0 && dmm->offset > 10) {
+					dmm->offset = 10;
+				}
+				if (dmm->current_value > 2.2 && dmm->offset < 11) {
+					dmm->offset = 11;
+				}
+
+
+				if (dmm->current_value < 20.0 && dmm->offset > 11) {
+					dmm->offset = 11;
+				}
+				if (dmm->current_value > 22.0 && dmm->offset < 12) {
+					dmm->offset = 12;
+				}
+
+				if (dmm->current_value < 200.0 && dmm->offset > 12) {
+					dmm->offset = 12;
+				}
+				if (dmm->current_value > 220.0 && dmm->offset < 13) {
+					dmm->offset = 13;
+				}
+
+
+				switch (dmm->offset) {
+					case 1: 
+						dmm->nanof = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000000000.0);
+						break;
+					case 2: 
+						dmm->nanof = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000000000.0);
+						break;
+					case 3: 
+						dmm->nanof = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000000000.0);
+						break;
+					case 4: 
+						dmm->microf = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000000.0);
+						break;
+					case 5: 
+						dmm->microf = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000000.0);
+						break;
+					case 6: 
+						dmm->microf = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000000.0);
+						break;
+					case 7: 
+						dmm->millif = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value * 1000.0);
+						break;
+					case 8: 
+						dmm->millif = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value * 1000.0);
+						break;
+					case 9: 
+						dmm->millif = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value * 1000.0);
+						break;
+					case 10: 
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value);
+						break;
+					case 11: 
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value);
+						break;
+					case 12: 
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value);
+						break;
+					case 13: 
+						snprintf(dmm->text, 10, "%6.1f", dmm->current_value);
+						break;
+						
+				}
+
+				if (isinf(dmm->current_value)) {
+					snprintf(dmm->text, 20, "!0L!!");
+				}
+
+				for (char *ptr = dmm->text; *ptr; ptr++) {
+					if (*ptr == ' ') *ptr = '!';
+				}
+
 				break;
 
 			case SR_MQ_FREQUENCY:
+				dmm->current_range = HZ;
+
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 12;
+				}
+
+				if (dmm->current_value < 200.0 && dmm->offset > 12) {
+					dmm->offset = 12;
+				}
+				if (dmm->current_value > 220.0 && dmm->offset < 13) {
+					dmm->offset = 13;
+				}
+
+				if (dmm->current_value < 2000.0 && dmm->offset > 13) {
+					dmm->offset = 13;
+				}
+				if (dmm->current_value > 2200.0 && dmm->offset < 14) {
+					dmm->offset = 14;
+				}
+
+				if (dmm->current_value < 20000.0 && dmm->offset > 14) {
+					dmm->offset = 14;
+				}
+				if (dmm->current_value > 22000.0 && dmm->offset < 15) {
+					dmm->offset = 15;
+				}
+
+				if (dmm->current_value < 200000.0 && dmm->offset > 15) {
+					dmm->offset = 15;
+				}
+				if (dmm->current_value > 220000.0 && dmm->offset < 16) {
+					dmm->offset = 15;
+				}
+
+				if (dmm->current_value < 2000000.0 && dmm->offset > 16) {
+					dmm->offset = 16;
+				}
+				if (dmm->current_value > 2200000.0 && dmm->offset < 17) {
+					dmm->offset = 17;
+				}
+
+				if (dmm->current_value < 20000000.0 && dmm->offset > 17) {
+					dmm->offset = 17;
+				}
+				if (dmm->current_value > 22000000.0 && dmm->offset < 18) {
+					dmm->offset = 18;
+				}
+
+
+				switch (dmm->offset) {
+					case 12: 
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value);
+						break;
+					case 13: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value / 1000);
+						break;
+					case 14: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value / 1000);
+						break;
+					case 15: 
+						dmm->kilo = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value / 1000);
+						break;
+					case 16: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.4f", dmm->current_value / 1000000);
+						break;
+					case 17: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.3f", dmm->current_value / 1000000);
+						break;
+					case 18: 
+						dmm->mega = true;
+						snprintf(dmm->text, 10, "%6.2f", dmm->current_value / 1000000);
+						break;
+						
+				}
+
+				if (isinf(dmm->current_value)) {
+					snprintf(dmm->text, 20, "!0L!!");
+				}
+
+				for (char *ptr = dmm->text; *ptr; ptr++) {
+					if (*ptr == ' ') *ptr = '!';
+				}
+
+
 				break;
 
 			case SR_MQ_DUTY_CYCLE:
+
+				dmm->current_range = DUTY;
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 10;
+				}
+
+				if (isinf(dmm->current_value)) {
+					snprintf(dmm->text, 20, "!VL!!");
+				} else {
+					snprintf(dmm->text, 10, "%6.1f", dmm->current_value);
+				}
+
 				break;
 
 			case SR_MQ_CONTINUITY:
+				dmm->current_range = CONT;
+				if (dmm->current_range != dmm->previous_range) {
+					dmm->offset = 10;
+				}
+
+				if (dmm->current_value > 0.5) {
+					snprintf(dmm->text, 10, "CL05E", dmm->current_value);
+				} else {
+					snprintf(dmm->text, 10, "0PEM", dmm->current_value);
+				}
+
 				break;
 
 			default:
+				printf("Unknown range: %d\n",data->meaning->mq);
 				break;
 
 		}

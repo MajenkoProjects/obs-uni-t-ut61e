@@ -31,12 +31,16 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 	}
 
 	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.30, 0.062), "H");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.055), 0, COORD(0.55, 0.062), "D");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.63, 0.062), "C");
+
+	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == DIODE))
+		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.055), 0, COORD(0.55, 0.062), "D");
+	if ((dmm == NULL) || (dmm->current_range & (CONT))) 
+		gdImageStringTTF(img, NULL, color, dmm_font, SIZE(0.070), 0, COORD(0.63, 0.062), "C");
 	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.060), 0, COORD(0.69, 0.062), "Δ");
 	if ((dmm == NULL) || dmm->micro) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.8, 0.06), "µ");
 	if ((dmm == NULL) || dmm->milli) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.83, 0.06), "m");
-	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == VOLTS))
+
+	if ((dmm == NULL) || ((dmm->current_range & (DIODE | VOLTS))))
 		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.87, 0.06), "V");
 	if ((dmm == NULL) || ((dmm->current_range & 0xFFF) == AMPS)) 
 		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.035), 0, COORD(0.90, 0.06), "A");
@@ -47,20 +51,22 @@ void main_image(gdImagePtr img, struct dmm *dmm, float offset, int color) {
 	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.12), "C");
 	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.12), "F");
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.050), 0, COORD(0.92, 0.11), "%");
+	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == DUTY) 
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.050), 0, COORD(0.92, 0.11), "%");
 
-	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == OHMS) {
-		if ((dmm == NULL) || dmm->mega) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.16), "M");
-		if ((dmm == NULL) || dmm->kilo) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.16), "k");
+	if ((dmm == NULL) || dmm->mega) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.84, 0.16), "M");
+	if ((dmm == NULL) || dmm->kilo) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.88, 0.16), "k");
+
+	if ((dmm == NULL) || (dmm->current_range & (CONT | OHMS))) 
 		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.92, 0.16), "Ω");
-	}
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.90, 0.20), "Hz");
+	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == HZ) 
+		gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.90, 0.20), "Hz");
 
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.82, 0.24), "m");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.24), "µ");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.905, 0.24), "n");
-	if ((dmm == NULL) || 0) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.24), "F");
+	if ((dmm == NULL) || dmm->millif) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.82, 0.24), "m");
+	if ((dmm == NULL) || dmm->microf) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.87, 0.24), "µ");
+	if ((dmm == NULL) || dmm->nanof) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.905, 0.24), "n");
+	if ((dmm == NULL) || (dmm->current_range & 0xFFF) == FARADS) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.935, 0.24), "F");
 
 
 	if ((dmm == NULL) || dmm->autorange) gdImageStringTTF(img, NULL, color, text_font, SIZE(0.040), 0, COORD(0.28, 0.35), "AUTO");
