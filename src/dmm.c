@@ -600,9 +600,9 @@ void datafeed_in(const struct sr_dev_inst *sdi __attribute__((unused)), const st
 				}
 
 				if (dmm->current_value > 0.5) {
-					snprintf(dmm->text, 10, "CL05E", dmm->current_value);
+					snprintf(dmm->text, 10, "CL05E");
 				} else {
-					snprintf(dmm->text, 10, "0PEM", dmm->current_value);
+					snprintf(dmm->text, 10, "0PEM");
 				}
 
 				break;
